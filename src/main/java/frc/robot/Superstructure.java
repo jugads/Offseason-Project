@@ -4,6 +4,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import frc.robot.subsystems.Hopper.HopperSubsystem;
+import frc.robot.subsystems.Climber.ClimberSubsystem;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import static frc.robot.Constants.ElevatorConstants.*;
 
@@ -20,7 +21,11 @@ public class Superstructure extends SubsystemBase {
         ELEVATOR_TO_L1,
         ELEVATOR_TO_L2,
         ELEVATOR_TO_L3,
-        ELEVATOR_TO_L4
+        ELEVATOR_TO_L4,
+        CLIMBER_UP,
+        CLIMBER_DOWN,
+        CLIMBER_DEPLOY,
+        CLIMB
     }
 
     public enum CurrentSuperState {
@@ -35,18 +40,24 @@ public class Superstructure extends SubsystemBase {
         MOVING_ELEVATOR_TO_L1,
         MOVING_ELEVATOR_TO_L2,
         MOVING_ELEVATOR_TO_L3,
-        MOVING_ELEVATOR_TO_L4
+        MOVING_ELEVATOR_TO_L4,
+        RAISING_CLIMBER,
+        LOWERING_CLIMBER,
+        DEPLOYING_CLIMBER,
+        CLIMBING
     }
 
     private final HopperSubsystem hopperSubsystem;
     private final ElevatorSubsystem elevatorSubsystem;
+    private final ClimberSubsystem climberSubsystem;
 
     private WantedSuperState wantedSuperState = WantedSuperState.IDLE;
     private CurrentSuperState currentSuperState = CurrentSuperState.IDLE;
 
-    public Superstructure(HopperSubsystem hopper, ElevatorSubsystem elevator) {
+    public Superstructure(HopperSubsystem hopper, ElevatorSubsystem elevator, ClimberSubsystem climber) {
         this.hopperSubsystem = hopper;
         this.elevatorSubsystem = elevator;
+        this.climberSubsystem = climber;
     }
 
     @Override
@@ -89,6 +100,15 @@ public class Superstructure extends SubsystemBase {
                 break;
             case ELEVATOR_TO_L4:
                 currentSuperState = CurrentSuperState.MOVING_ELEVATOR_TO_L4;
+                break;
+            case CLIMBER_UP:
+                currentSuperState = CurrentSuperState.RAISING_CLIMBER;
+                break;
+            case CLIMBER_DOWN:
+                currentSuperState = CurrentSuperState.LOWERING_CLIMBER;
+                break;
+            case CLIMBER_DEPLOY:
+                currentSuperState = CurrentSuperState.DEPLOYING_CLIMBER;
                 break;
             case IDLE:
             default:
@@ -139,10 +159,19 @@ public class Superstructure extends SubsystemBase {
                 elevatorSubsystem.setSetpointPercent(kElevL4); // mid height
                 elevatorSubsystem.setWantedState(ElevatorSubsystem.WantedState.GO_TO_SETPOINT);
                 break;
+            case RAISING_CLIMBER:
+                climberSubsystem.setWantedState(ClimberSubsystem.WantedState.MOVE_UP);
+                break;
+            case LOWERING_CLIMBER:
+                climberSubsystem.setWantedState(ClimberSubsystem.WantedState.MOVE_DOWN);
+                break;
+            case DEPLOYING_CLIMBER: //!!!!MAKE THIS DEPLOY!!!!!
+                climberSubsystem.setWantedState(ClimberSubsystem.WantedState.DEPLOY);
             case IDLE:
             default:
                 hopperSubsystem.setWantedState(HopperSubsystem.WantedState.IDLE);
                 elevatorSubsystem.setWantedState(ElevatorSubsystem.WantedState.IDLE);
+                climberSubsystem.setWantedState(ClimberSubsystem.WantedState.IDLE);
                 break;
         }
     }

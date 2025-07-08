@@ -5,7 +5,12 @@
 package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
+import frc.robot.Constants.ClimberConstants.*;
+import frc.robot.Constants.ElevatorConstants.*;
+import frc.robot.Constants.HopperConstants.*;
 import frc.robot.Superstructure.WantedSuperState;
+import frc.robot.subsystems.Climber.ClimberIOSparkMax;
+import frc.robot.subsystems.Climber.ClimberSubsystem;
 import frc.robot.subsystems.Elevator.ElevatorIOSparkMax;
 import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Hopper.HopperIO;
@@ -30,6 +35,7 @@ public class RobotContainer {
   HopperSubsystem hopper;
   Superstructure superstructure;
   ElevatorSubsystem elevator;
+  ClimberSubsystem climber;
   private final CommandXboxController m_driverController =
       new CommandXboxController(0);
 
@@ -38,7 +44,8 @@ public class RobotContainer {
     // Configure the trigger bindings
     hopper = new HopperSubsystem(new HopperIOSparkMax(6,7));
     elevator = new ElevatorSubsystem(new ElevatorIOSparkMax(1, 2));
-    superstructure = new Superstructure(hopper, elevator);
+    climber = new ClimberSubsystem(new ClimberIOSparkMax(8, 9));
+    superstructure = new Superstructure(hopper, elevator, climber);
     configureBindings();
   }
 
@@ -78,6 +85,20 @@ public class RobotContainer {
   .onTrue(
     Commands.sequence(
       superstructure.setStateCommand(Superstructure.WantedSuperState.ELEVATOR_TO_L4)
+    )
+  );
+  m_driverController
+  .rightTrigger()
+  .whileTrue(
+    Commands.sequence(
+      superstructure.setStateCommand(Superstructure.WantedSuperState.CLIMBER_DEPLOY)
+    )
+  );
+  m_driverController
+  .leftTrigger()
+  .whileTrue(
+    Commands.sequence(
+      superstructure.setStateCommand(Superstructure.WantedSuperState.CLIMBER_UP)
     )
   );
 
