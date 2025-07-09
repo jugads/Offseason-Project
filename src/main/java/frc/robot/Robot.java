@@ -4,7 +4,10 @@
 
 package frc.robot;
 
+import com.ctre.phoenix6.hardware.CANrange;
+
 import edu.wpi.first.wpilibj.TimedRobot;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 
@@ -17,7 +20,7 @@ public class Robot extends TimedRobot {
   private Command m_autonomousCommand;
 
   private final RobotContainer m_robotContainer;
-
+  private final CANrange sensor = new CANrange(62);
   /**
    * This function is run when the robot is first started up and should be used for any
    * initialization code.
@@ -43,6 +46,8 @@ public class Robot extends TimedRobot {
     // block in order for anything in the Command-based framework to work.
     CommandScheduler.getInstance().run();
     m_robotContainer.superstructure.periodic();
+    SmartDashboard.putNumber("67", sensor.getDistance().getValueAsDouble());
+    SmartDashboard.putBoolean("detetction", sensor.getIsDetected().getValue().booleanValue());
   }
 
   /** This function is called once each time the robot enters Disabled mode. */

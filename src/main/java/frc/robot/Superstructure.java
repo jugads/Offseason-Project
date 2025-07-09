@@ -53,7 +53,7 @@ public class Superstructure extends SubsystemBase {
 
     private WantedSuperState wantedSuperState = WantedSuperState.IDLE;
     private CurrentSuperState currentSuperState = CurrentSuperState.IDLE;
-
+    boolean elevatorCanMove = false;
     public Superstructure(HopperSubsystem hopper, ElevatorSubsystem elevator, ClimberSubsystem climber) {
         this.hopperSubsystem = hopper;
         this.elevatorSubsystem = elevator;

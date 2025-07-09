@@ -9,6 +9,13 @@ import frc.robot.Constants.ClimberConstants.*;
 import frc.robot.Constants.ElevatorConstants.*;
 import frc.robot.Constants.HopperConstants.*;
 import frc.robot.Superstructure.WantedSuperState;
+import frc.robot.generated.TunerConstants;
+import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.Arm.ArmIOSparkMax;
+import frc.robot.subsystems.Arm.ArmSubsystem;
+import frc.robot.subsystems.Arm.ArmSubsystem.WantedState;
+import frc.robot.subsystems.Bluetooth.BluetoothIOSparkMax;
+import frc.robot.subsystems.Bluetooth.BluetoothSubsystem;
 import frc.robot.subsystems.Climber.ClimberIOSparkMax;
 import frc.robot.subsystems.Climber.ClimberSubsystem;
 import frc.robot.subsystems.Elevator.ElevatorIOSparkMax;
@@ -16,6 +23,13 @@ import frc.robot.subsystems.Elevator.ElevatorSubsystem;
 import frc.robot.subsystems.Hopper.HopperIO;
 import frc.robot.subsystems.Hopper.HopperIOSparkMax;
 import frc.robot.subsystems.Hopper.HopperSubsystem;
+
+import static edu.wpi.first.units.Units.MetersPerSecond;
+
+import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
+import com.ctre.phoenix6.swerve.SwerveRequest;
+import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -36,6 +50,22 @@ public class RobotContainer {
   Superstructure superstructure;
   ElevatorSubsystem elevator;
   ClimberSubsystem climber;
+  ArmSubsystem arm;
+  BluetoothSubsystem bluetooth;
+  CommandSwerveDrivetrain drivetrain;
+  private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
+    private double MaxAngularRate = 3 * Math.PI;
+    private double gyro = 1;
+    // Swerve drive requests
+    private final SwerveRequest.FieldCentric drive = new SwerveRequest.FieldCentric()
+            .withDeadband(MaxSpeed*0.1)
+            .withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
+
+    private final SwerveRequest.RobotCentric driveRR = new SwerveRequest.RobotCentric()
+            .withDeadband(MaxSpeed * 0.1)
+            .withRotationalDeadband(MaxAngularRate * 0.1)
+            .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final CommandXboxController m_driverController =
       new CommandXboxController(0);
 
@@ -45,7 +75,20 @@ public class RobotContainer {
     hopper = new HopperSubsystem(new HopperIOSparkMax(6,7));
     elevator = new ElevatorSubsystem(new ElevatorIOSparkMax(1, 2));
     climber = new ClimberSubsystem(new ClimberIOSparkMax(8, 9));
+    arm = new ArmSubsystem(new ArmIOSparkMax(3));
+    bluetooth = new BluetoothSubsystem(new BluetoothIOSparkMax(5));
+    drivetrain = TunerConstants.createDrivetrain();
     superstructure = new Superstructure(hopper, elevator, climber);
+
+    drivetrain.setDefaultCommand(
+            drivetrain.applyRequest(() ->
+                drive
+                .withForwardPerspective(ForwardPerspectiveValue.OperatorPerspective)
+                .withVelocityX(-m_driverController.getLeftY() * MaxSpeed *gyro)
+                .withVelocityY(-m_driverController.getLeftX() * MaxSpeed * gyro)
+                .withRotationalRate(-m_driverController.getRightX() * MaxAngularRate)
+            )
+        );
     configureBindings();
   }
 
@@ -59,49 +102,23 @@ public class RobotContainer {
    * joysticks}.
    */
   private void configureBindings() {
-    m_driverController
-  .a()
-  .onTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.ELEVATOR_TO_L2)
+    m_driverController.a().onTrue(
+      arm.setWantedStateCommand(ArmSubsystem.WantedState.GO_TO_REGULAR_SCORE)
     )
-  );
-  m_driverController
-  .b()
-  .onTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.ELEVATOR_TO_L3)
-    )
-  );
-  m_driverController
-  .x()
-  .onTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.ELEVATOR_TO_L1)
-    )
-  );
-  m_driverController
-  .y()
-  .onTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.ELEVATOR_TO_L4)
-    )
-  );
-  m_driverController
-  .rightTrigger()
-  .whileTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.CLIMBER_DEPLOY)
-    )
-  );
-  m_driverController
-  .leftTrigger()
-  .whileTrue(
-    Commands.sequence(
-      superstructure.setStateCommand(Superstructure.WantedSuperState.CLIMBER_UP)
-    )
-  );
+    .onFalse(arm.setWantedStateCommand(ArmSubsystem.WantedState.HOLD));
 
+    m_driverController.y().onTrue(
+      bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.SUCKING)
+    )
+    .onFalse(bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE));
+
+    m_driverController.leftBumper().onTrue(
+      Commands.sequence(
+        bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.SCORING),
+        new WaitUntilCommand(() -> !bluetooth.hasCoral()),
+        bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE)
+      )
+    );
   }
 
   /**
