@@ -11,6 +11,9 @@ import frc.robot.Constants.HopperConstants.*;
 import frc.robot.Superstructure.WantedSuperState;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
+import frc.robot.subsystems.LEDs;
+import frc.robot.subsystems.AlgaeGripper.AlgaeGripperIOTalonFX;
+import frc.robot.subsystems.AlgaeGripper.AlgaeGripperSubsystem;
 import frc.robot.subsystems.Arm.ArmIOSparkMax;
 import frc.robot.subsystems.Arm.ArmSubsystem;
 import frc.robot.subsystems.Arm.ArmSubsystem.WantedState;
@@ -30,6 +33,8 @@ import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 
+import edu.wpi.first.wpilibj.AddressableLED;
+import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
@@ -52,7 +57,9 @@ public class RobotContainer {
   ClimberSubsystem climber;
   ArmSubsystem arm;
   BluetoothSubsystem bluetooth;
+  AlgaeGripperSubsystem algae;
   CommandSwerveDrivetrain drivetrain;
+  LEDs leds;
   private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     private double MaxAngularRate = 3 * Math.PI;
     private double gyro = 1;
@@ -77,7 +84,9 @@ public class RobotContainer {
     climber = new ClimberSubsystem(new ClimberIOSparkMax(8, 9));
     arm = new ArmSubsystem(new ArmIOSparkMax(3));
     bluetooth = new BluetoothSubsystem(new BluetoothIOSparkMax(5));
+    algae = new AlgaeGripperSubsystem(new AlgaeGripperIOTalonFX(21));
     drivetrain = TunerConstants.createDrivetrain();
+    leds = new LEDs(new AddressableLED(9), new AddressableLEDBuffer(138), bluetooth, algae);
     superstructure = new Superstructure(hopper, elevator, climber);
 
     drivetrain.setDefaultCommand(
@@ -117,6 +126,22 @@ public class RobotContainer {
         bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.SCORING),
         new WaitUntilCommand(() -> !bluetooth.hasCoral()),
         bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE)
+      )
+    );
+
+    m_driverController.x().onTrue(
+      Commands.sequence(
+        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.SUCKING)
+      )
+    )
+    .onFalse(algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.IDLE)
+    );
+
+    m_driverController.b().onTrue(
+      Commands.sequence(
+        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.SCORING),
+        new WaitUntilCommand(() -> !algae.hasAlgae()),
+        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.IDLE)
       )
     );
   }
