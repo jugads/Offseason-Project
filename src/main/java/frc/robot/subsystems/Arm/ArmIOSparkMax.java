@@ -6,6 +6,7 @@ import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.RelativeEncoder;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -13,7 +14,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 public class ArmIOSparkMax implements ArmIO {
     private final SparkMax motor;
     private final DutyCycleEncoder encoder;
-    PIDController controller= new PIDController(2., 0, 0.0);
+    private final ArmFeedforward ff = new ArmFeedforward(0., 0.035, 0);
+    PIDController controller= new PIDController(2.25, 0, 0.0);
 
     public ArmIOSparkMax(int ID) {
         motor = new SparkMax(ID, MotorType.kBrushless);  // Neo 550 or Neo
@@ -38,6 +40,12 @@ public class ArmIOSparkMax implements ArmIO {
         double output = controller.calculate(currentPosition);
 
         motor.set(output); // same direction for both
+    }
+    @Override
+    public void holdArm() {
+        double currentPosition = -(encoder.get()-0.355467);
+        SmartDashboard.putNumber("Arm/FF", ff.calculate(currentPosition * Math.PI * 2, 0));
+        setArmSpeed(ff.calculate(currentPosition * Math.PI * 2, 0));
     }
     @Override
     public void refreshData() {

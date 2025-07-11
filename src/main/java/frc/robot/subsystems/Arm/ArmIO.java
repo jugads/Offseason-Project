@@ -8,5 +8,6 @@ public interface ArmIO {
     default void setArmSpeed(double speed){}
     default void updateInputs(ArmIOInputs inputs){}
     default void setPositionSetpoint(double setpoint) {}
+    default void holdArm() {}
     default void refreshData() {}
 }

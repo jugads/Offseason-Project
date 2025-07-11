@@ -4,12 +4,20 @@
 
 package frc.robot;
 
+import java.util.Set;
+
 import com.ctre.phoenix6.hardware.CANrange;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import edu.wpi.first.wpilibj2.command.Commands;
 
 /**
  * The methods in this class are called automatically corresponding to each mode, as described in
@@ -28,7 +36,14 @@ public class Robot extends TimedRobot {
   public Robot() {
     // Instantiate our RobotContainer.  This will perform all our button bindings, and put our
     // autonomous chooser on the dashboard.
+    FollowPathCommand.warmupCommand().schedule();
     m_robotContainer = new RobotContainer();
+    CommandScheduler.getInstance().schedule(
+    Commands.defer(
+        () -> AutoBuilder.pathfindToPose(m_robotContainer.drivetrain.getPose(), new PathConstraints(3, 4., 3*Math.PI, 3*Math.PI)),
+        Set.of() // required subsystem dependencies if any
+    )
+    );
   }
 
   /**
@@ -48,11 +63,14 @@ public class Robot extends TimedRobot {
     m_robotContainer.superstructure.periodic();
     SmartDashboard.putNumber("67", sensor.getDistance().getValueAsDouble());
     SmartDashboard.putBoolean("detetction", sensor.getIsDetected().getValue().booleanValue());
+    SmartDashboard.putNumber("Controls/Level", m_robotContainer.level);
   }
 
   /** This function is called once each time the robot enters Disabled mode. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+    m_robotContainer.setRobotStateIdle();
+  }
 
   @Override
   public void disabledPeriodic() {}
@@ -78,6 +96,7 @@ public class Robot extends TimedRobot {
     // teleop starts running. If you want the autonomous to
     // continue until interrupted by another command, remove
     // this line or comment it out.
+    
     if (m_autonomousCommand != null) {
       m_autonomousCommand.cancel();
     }

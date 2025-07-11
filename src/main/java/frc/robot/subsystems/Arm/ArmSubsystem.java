@@ -16,14 +16,20 @@ public class ArmSubsystem extends SubsystemBase {
         HOLD,
         MOVE_UP,
         MOVE_DOWN,
-        GO_TO_REGULAR_SCORE
+        GO_TO_REGULAR_SCORE,
+        GO_TO_L1,
+        GO_TO_L4,
+        GO_TO_TRANSFER
     }
 
     private enum SystemState {
         HOLDING,
         UPPING,
         DOWNING,
-        GOING_TO_SCORE_L2_L3
+        GOING_TO_SCORE_L2_L3,
+        GOING_TO_SCORE_L1,
+        GOING_TO_SCORE_L4,
+        GOING_TO_TRANSFER
     }
     private WantedState wantedState = WantedState.HOLD;
     private SystemState systemState = SystemState.HOLDING;
@@ -52,12 +58,23 @@ public class ArmSubsystem extends SubsystemBase {
                 io.setArmSpeed(-0.1);
                 break;
             case HOLDING:
-                io.setArmSpeed(MathUtil.clamp(0.03*Math.cos(inputs.position*2*Math.PI), 0.01, 0.05));
+                io.holdArm();
                 break;
             case GOING_TO_SCORE_L2_L3:
-                io.setPositionSetpoint(0.25);
+                io.setPositionSetpoint(0.175);
+                break;
+            case GOING_TO_SCORE_L1:
+                io.setPositionSetpoint(-0.055);
+                break;
+            case GOING_TO_SCORE_L4:
+                io.setPositionSetpoint(0.1475);
+                break;
+            case GOING_TO_TRANSFER:
+                io.setPositionSetpoint(-0.23);
                 break;
             default:
+                io.holdArm();
+                break;
         }
     }
     private SystemState handleStateTransition() {
@@ -66,10 +83,16 @@ public class ArmSubsystem extends SubsystemBase {
                 return SystemState.HOLDING;
             case GO_TO_REGULAR_SCORE:
                 return SystemState.GOING_TO_SCORE_L2_L3;
+            case GO_TO_L1:
+                return SystemState.GOING_TO_SCORE_L1;
+            case GO_TO_L4:
+                return SystemState.GOING_TO_SCORE_L4;
             case MOVE_UP:
                 return SystemState.UPPING;
             case MOVE_DOWN:
                 return SystemState.DOWNING;
+            case GO_TO_TRANSFER:
+                return SystemState.GOING_TO_TRANSFER;
             default:
                 return SystemState.HOLDING;
         }
@@ -83,6 +106,9 @@ public class ArmSubsystem extends SubsystemBase {
         this.wantedState = state;
     }
 
+    public double getPosition() {
+        return inputs.position;
+    }
     public WantedState getWantedState() {
         return wantedState;
     }
