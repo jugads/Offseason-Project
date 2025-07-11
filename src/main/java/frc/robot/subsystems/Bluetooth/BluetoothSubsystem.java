@@ -41,6 +41,7 @@ public class BluetoothSubsystem extends SubsystemBase {
         io.updateInputs(inputs);
         SmartDashboard.putString("Bluetooth/State", systemState.toString());
         SmartDashboard.putBoolean("Bluetooth/Has Coral", hasCoral);
+        SmartDashboard.putNumber("Bluetooth/Score Count", scoreCounter);
         systemState = handleStateTransition();
         switch(systemState) {
             default:
@@ -62,6 +63,7 @@ public class BluetoothSubsystem extends SubsystemBase {
                 break;
             case HAS_CORAL:
                 io.setMotor(0.05);
+                scoreCounter = 0;
                 break;
         }
         if (inputs.current > 10) {
@@ -80,15 +82,15 @@ public class BluetoothSubsystem extends SubsystemBase {
 
     public SystemState handleStateTransition() {
         switch(wantedState) {
-            case IDLE:
-            default:
-                return SystemState.IDLING;
             case SCORING:
                 return SystemState.READY_TO_SCORE;
             case STALLING:
                 return SystemState.HAS_CORAL;
             case SUCKING:
                 return SystemState.SEARCHING;
+            case IDLE:
+            default:
+                return SystemState.IDLING;
         }
     }
     public void setWantedState(WantedState state) {

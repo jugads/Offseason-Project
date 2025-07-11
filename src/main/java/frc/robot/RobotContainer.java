@@ -9,6 +9,7 @@ import frc.robot.Constants.ClimberConstants.*;
 import frc.robot.Constants.ElevatorConstants.*;
 import frc.robot.Constants.HopperConstants.*;
 import frc.robot.Superstructure.WantedSuperState;
+import frc.robot.commands.TransferCommand;
 import frc.robot.generated.TunerConstants;
 import frc.robot.subsystems.CommandSwerveDrivetrain;
 import frc.robot.subsystems.LEDs;
@@ -32,17 +33,25 @@ import static edu.wpi.first.units.Units.MetersPerSecond;
 import com.ctre.phoenix6.swerve.SwerveModule.DriveRequestType;
 import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
+import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
+import static frc.robot.Constants.ElevatorConstants.*;
+import static frc.robot.Constants.ReefPoses.*;
+
+import java.util.Set;
+import java.util.function.Supplier;
 /**
  * This class is where the bulk of the robot should be declared. Since Command-based is a
  * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
@@ -75,6 +84,9 @@ public class RobotContainer {
             .withDriveRequestType(DriveRequestType.OpenLoopVoltage);
   private final CommandXboxController m_driverController =
       new CommandXboxController(0);
+  private final CommandXboxController operator = 
+      new CommandXboxController(1);
+  int level = 3;
 
   /** The container for the robot. Contains subsystems, OI devices, and commands. */
   public RobotContainer() {
@@ -87,8 +99,8 @@ public class RobotContainer {
     algae = new AlgaeGripperSubsystem(new AlgaeGripperIOTalonFX(21));
     drivetrain = TunerConstants.createDrivetrain();
     leds = new LEDs(new AddressableLED(9), new AddressableLEDBuffer(138), bluetooth, algae);
-    superstructure = new Superstructure(hopper, elevator, climber);
-
+    superstructure = new Superstructure(hopper, elevator, climber, bluetooth, arm);
+    
     drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
                 drive
@@ -97,7 +109,7 @@ public class RobotContainer {
                 .withVelocityY(-m_driverController.getLeftX() * MaxSpeed * gyro)
                 .withRotationalRate(-m_driverController.getRightX() * MaxAngularRate)
             )
-        );
+    );
     configureBindings();
   }
 
@@ -108,42 +120,106 @@ public class RobotContainer {
    * edu.wpi.first.wpilibj2.command.button.CommandGenericHID}'s subclasses for {@link
    * CommandXboxController Xbox}/{@link edu.wpi.first.wpilibj2.command.button.CommandPS4Controller
    * PS4} controllers or {@link edu.wpi.first.wpilibj2.command.button.CommandJoystick Flight
-   * joysticks}.
+   * m_driverControllers}.
    */
   private void configureBindings() {
-    m_driverController.a().onTrue(
-      arm.setWantedStateCommand(ArmSubsystem.WantedState.GO_TO_REGULAR_SCORE)
-    )
-    .onFalse(arm.setWantedStateCommand(ArmSubsystem.WantedState.HOLD));
-
-    m_driverController.y().onTrue(
-      bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.SUCKING)
-    )
-    .onFalse(bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE));
+    
 
     m_driverController.leftBumper().onTrue(
-      Commands.sequence(
-        bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.SCORING),
-        new WaitUntilCommand(() -> !bluetooth.hasCoral()),
-        bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE)
-      )
+      superstructure.setStateCommand(Superstructure.WantedSuperState.L2)
+    ).onFalse(
+      superstructure.setStateCommand(WantedSuperState.IDLE)
     );
-
-    m_driverController.x().onTrue(
-      Commands.sequence(
-        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.SUCKING)
+    m_driverController.rightBumper().onTrue(
+      superstructure.setStateCommand(Superstructure.WantedSuperState.L3)
+    ).onFalse(
+      superstructure.setStateCommand(WantedSuperState.IDLE)
+    );
+    m_driverController.y().onTrue(
+      superstructure.setStateCommand(WantedSuperState.SCORE)
+    )
+    .onFalse(
+      superstructure.setStateCommand(WantedSuperState.IDLE)
+    );
+    operator.leftTrigger().whileTrue(
+      new SequentialCommandGroup(
+        superstructure.setStateCommand(WantedSuperState.TRANSFER_PREP),
+        new WaitUntilCommand(() -> arm.getPosition() < -0.21),
+        superstructure.setStateCommand(WantedSuperState.HANDOFF),
+        new WaitUntilCommand(() -> bluetooth.hasCoral()),
+        superstructure.setStateCommand(WantedSuperState.SWINGLY_DINGLY),
+        bluetooth.setWantedStateCommand(BluetoothSubsystem.WantedState.IDLE),
+        hopper.setWantedStateCommand(HopperSubsystem.WantedState.IDLE)
       )
     )
-    .onFalse(algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.IDLE)
-    );
+    .onFalse(superstructure.setStateCommand(WantedSuperState.IDLE));
 
-    m_driverController.b().onTrue(
-      Commands.sequence(
-        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.SCORING),
-        new WaitUntilCommand(() -> !algae.hasAlgae()),
-        algae.setWantedStateCommand(AlgaeGripperSubsystem.WantedState.IDLE)
-      )
-    );
+    m_driverController.b().whileTrue(
+            new SequentialCommandGroup(
+            new ConditionalCommand(
+              new ConditionalCommand(
+                superstructure.setStateCommand(Superstructure.WantedSuperState.L3), 
+                superstructure.setStateCommand(Superstructure.WantedSuperState.L4), () -> level == 3)
+              , 
+              superstructure.setStateCommand(Superstructure.WantedSuperState.L2), () -> level != 2),
+            Commands.defer(
+                () -> AutoBuilder.pathfindToPose(drivetrain.getNearestReefPoseRight(), K_CONSTRAINTS_Barging),
+                Set.of() // required subsystem dependencies if any
+            )
+            )
+        );
+        m_driverController.x().whileTrue(
+            new SequentialCommandGroup(
+            new ConditionalCommand(
+              new ConditionalCommand(
+                superstructure.setStateCommand(Superstructure.WantedSuperState.L3), 
+                superstructure.setStateCommand(Superstructure.WantedSuperState.L4), () -> level == 3)
+              , 
+              superstructure.setStateCommand(Superstructure.WantedSuperState.L2), () -> level != 2),
+            Commands.defer(
+                () -> AutoBuilder.pathfindToPose(drivetrain.getNearestReefPoseLeft(), K_CONSTRAINTS_Barging),
+                Set.of() // required subsystem dependencies if any
+            )
+            )
+        );
+        m_driverController.povLeft().whileTrue(
+            drivetrain.applyRequest(
+            () ->
+            driveRR
+            .withVelocityX(0) // Drive forward with negative Y (forward)
+            .withVelocityY(0.75) // Drive left with negative X (left)
+            .withRotationalRate(0.) // Drive counterclockwise with negative X (left)
+        )
+        );
+        m_driverController.povRight().whileTrue(
+            drivetrain.applyRequest(
+            () ->
+            driveRR
+            .withVelocityX(0) // Drive forward with negative Y (forward)
+            .withVelocityY(-0.75) // Drive left with negative X (left)
+            .withRotationalRate(0.) // Drive counterclockwise with negative X (left)
+        )
+        );
+        m_driverController.povUp().whileTrue(
+            drivetrain.applyRequest(
+            () ->
+            driveRR
+            .withVelocityX(0.75) // Drive forward with negative Y (forward)
+            .withVelocityY(0) // Drive left with negative X (left)
+            .withRotationalRate(0.) // Drive counterclockwise with negative X (left)
+        )
+        );
+        m_driverController.povDown().whileTrue(
+            drivetrain.applyRequest(
+            () ->
+            driveRR
+            .withVelocityX(-0.75) // Drive forward with negative Y (forward)
+            .withVelocityY(0) // Drive left with negative X (left)
+            .withRotationalRate(0.) // Drive counterclockwise with negative X (left)
+        )
+        );
+        operator.povUp().onTrue(new InstantCommand(() -> level++));
+        operator.povDown().onTrue(new InstantCommand(() -> level--));
   }
 
   /**
@@ -154,5 +230,8 @@ public class RobotContainer {
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
     return Commands.none();
+  }
+  public void setRobotStateIdle() {
+    superstructure.setWantedSuperState(WantedSuperState.IDLE);
   }
 }

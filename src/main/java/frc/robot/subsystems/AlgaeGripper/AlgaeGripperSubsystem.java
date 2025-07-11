@@ -32,7 +32,7 @@ public class AlgaeGripperSubsystem extends SubsystemBase{
     }
 
     public boolean hasAlgae() {
-        return hasAlgae;
+        return inputs.seeingAlgae;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class AlgaeGripperSubsystem extends SubsystemBase{
         switch(systemState) {
             default:
             case IDLING:
-                if (hasAlgae) {
+                if (inputs.seeingAlgae) {
                     io.setMotor(0.05);
                 }
                 else {
@@ -61,15 +61,6 @@ public class AlgaeGripperSubsystem extends SubsystemBase{
             case HAS_ALGAE:
                 io.setMotor(.05);
                 break;
-        }
-        if (inputs.distance < 0.08) {
-            counter++;
-        }
-        if (counter > 5) {
-            hasAlgae = true;
-        }
-        if (inputs.seeingAlgae == false || inputs.distance > 0.08) {
-            hasAlgae = false;
         }
     }
 

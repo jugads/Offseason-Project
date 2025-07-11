@@ -56,10 +56,10 @@ public class Constants {
         public static final double kIDynamic = 0.0;
         public static final double kDDynamic = 0.;
         public static final double kElevL1 = 0.57;
-        public static final double kElevL2 = 0.16; 
+        public static final double kElevL2 = 0.2; 
         public static final double kElevL3 = 0.49;
         public static final double kElevL4 = 0.94;
-        public static final double kElevTran = 0.38; //0.3775
+        public static final double kElevTran = 0.37; //0.3775
     }
     public class ArmConstants{
         public static final int kMotorID = 3;
@@ -115,12 +115,12 @@ public class Constants {
         public static final Pose2d kBLUESOURCELEFT_bargeWall = new Pose2d(1.64, 7.42, Rotation2d.fromDegrees(-52));
 
         public static final PathConstraints K_CONSTRAINTS_Fastest = new PathConstraints(5.41, 6., 3*Math.PI, 3*Math.PI);
-        public static final PathConstraints K_CONSTRAINTS_Barging = new PathConstraints(2, 2., 3*Math.PI, 3*Math.PI);
+        public static final PathConstraints K_CONSTRAINTS_Barging = new PathConstraints(3, 4., 3*Math.PI, 3*Math.PI);
     }
 
     public class AlignmentPoses {
         public static final Pose2d[] kAliRED0_1 = new Pose2d[]{new Pose2d(11.65, 3.77, Rotation2d.fromDegrees(0)), new Pose2d(11.65, 4.23, Rotation2d.fromDegrees(0))};
-        public static final Pose2d[] kAliRED2_3 = new Pose2d[]{new Pose2d(12.44, 5.3, Rotation2d.fromDegrees(-60)), new Pose2d(12.09, 5.08, Rotation2d.fromDegrees(-60))};
+        public static final Pose2d[] kAliRED2_3 = new Pose2d[]{new Pose2d(12.42, 5.43, Rotation2d.fromDegrees(-60)), new Pose2d(12.09, 5.08, Rotation2d.fromDegrees(-60))};
         public static final Pose2d[] kAliRED4_5 = new Pose2d[]{new Pose2d(13.56, 5.37, Rotation2d.fromDegrees(-120)), new Pose2d(13.96, 5.14, Rotation2d.fromDegrees(-120))};
         public static final Pose2d[] kAliRED6_7 = new Pose2d[]{new Pose2d(14.49, 4.25, Rotation2d.fromDegrees(180)), new Pose2d(14.49, 3.86, Rotation2d.fromDegrees(180))};
         public static final Pose2d[] kAliRED8_9 = new Pose2d[]{new Pose2d(13.70, 2.57, Rotation2d.fromDegrees(60)), new Pose2d(13.99, 2.74, Rotation2d.fromDegrees(60))};

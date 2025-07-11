@@ -3,6 +3,7 @@ package frc.robot.subsystems.Elevator;
 import com.revrobotics.spark.SparkMax;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.ElevatorFeedforward;
 import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 
@@ -17,7 +18,9 @@ public class ElevatorIOSparkMax implements ElevatorIO {
 
     private final SparkLimitSwitch bottomSwitch;
     private final SparkLimitSwitch topSwitch;
-    PIDController controller= new PIDController(1.78, 0, 0.005);
+    ElevatorFeedforward ff = new ElevatorFeedforward(0.02, 0.055, 0);
+    PIDController controller= new PIDController(1.69, 0, 0.03
+    );
     public ElevatorIOSparkMax(int leftMotorID, int rightMotorID) {
         leftMotor = new SparkMax(leftMotorID, MotorType.kBrushless);
         rightMotor = new SparkMax(rightMotorID, MotorType.kBrushless);
@@ -48,7 +51,12 @@ public class ElevatorIOSparkMax implements ElevatorIO {
         leftMotor.set(-speed);
         rightMotor.set(-speed);
     }
-
+    @Override
+    public void stall() {
+        double speed = ff.calculate(0.);
+        leftMotor.set(-speed);
+        rightMotor.set(leftMotor.get());
+    }
     @Override
     public void setPositionSetpoint(double percent) {
         double clamped = MathUtil.clamp(percent, 0.0, 1.0);

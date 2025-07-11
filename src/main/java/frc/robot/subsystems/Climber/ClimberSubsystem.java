@@ -34,7 +34,13 @@ public class ClimberSubsystem extends SubsystemBase{
                 io.runClimber(-0.5);
                 break;
             case DEPLOY:
-                deployClimber();
+                if (inputs.position < k90DegreesRotations) {
+                io.runClimber(0.7);
+                }
+                else {
+                    io.runClimber(0.);
+                }
+                break;
             case IDLE:
             default:
                 io.runClimber(0.0);
@@ -47,8 +53,5 @@ public class ClimberSubsystem extends SubsystemBase{
     }
     public WantedState getWantedState() {
         return wantedState;
-    }
-    public Command deployClimber() {
-        return new RunCommand(() -> io.runClimber(0.5)).until(() -> inputs.position > k90DegreesRotations).andThen(() -> io.runClimber(0.0));
     }
 }

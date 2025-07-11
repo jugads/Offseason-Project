@@ -2,6 +2,8 @@ package frc.robot.subsystems.Elevator;
 
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class ElevatorSubsystem extends SubsystemBase {
@@ -46,7 +48,7 @@ public class ElevatorSubsystem extends SubsystemBase {
                 break;
 
             case HOLD:
-                io.setSpeed(0.05); // Small hold voltage
+                io.stall(); // Small hold voltage
                 break;
 
             case GO_TO_SETPOINT:
@@ -89,5 +91,11 @@ public class ElevatorSubsystem extends SubsystemBase {
     }
     public WantedState getWantedState() {
         return wantedState;
+    }
+    public Command setWantedStateCommand(WantedState state) {
+        return new InstantCommand(() -> setWantedState(state));
+    }
+    public Command setSetpointCommand(double percent) {
+        return new InstantCommand(() -> setSetpointPercent(percent));
     }
 }
