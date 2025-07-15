@@ -103,4 +103,8 @@ public class BluetoothSubsystem extends SubsystemBase {
     public Command setWantedStateCommand(WantedState state) {
         return new InstantCommand(() -> setWantedState(state));
     }
+    public void setHasCoral() {
+        counter = 6;
+        hasCoral = true;
+    }
 }

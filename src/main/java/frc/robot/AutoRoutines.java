@@ -59,22 +59,22 @@ public class AutoRoutines {
     public Command DriveTest() {
         var initialPose = getRightSideAutoStartingPose();
         return Commands.sequence(
+            new InstantCommand(() ->drivetrain.getPigeon2().setYaw(DriverStation.getAlliance().get() == Alliance.Blue ? 180 : 0)),
             new InstantCommand(() -> drivetrain.resetPose(initialPose)),
             m_factory.trajectoryCmd("StartToF")
-
         );
     }
     public Command BranchesFCD() {
         var initialPose = getRightSideAutoStartingPose();
+        
         return Commands.sequence(
+            new InstantCommand(() -> bluetooth.setHasCoral()),
+            new InstantCommand(() ->drivetrain.getPigeon2().setYaw(DriverStation.getAlliance().get() == Alliance.Blue ? 180 : 0)),
             // initial settings
             superstructure.setStateCommand(WantedSuperState.IDLE),
             new ParallelCommandGroup(
-                new InstantCommand(() -> drivetrain.resetPose(initialPose)),
-                new InstantCommand(() -> arm.setWantedState(WantedState.AUTON_START_MOVE_ARM_OUT))),
-            new WaitUntilCommand(() -> arm.getPosition() < 0.25),
-            new InstantCommand(() -> arm.setWantedState(WantedState.HOLD)),
-
+                new InstantCommand(() -> drivetrain.resetPose(initialPose))
+            ),
             // Piece 1
 
             new ParallelCommandGroup(

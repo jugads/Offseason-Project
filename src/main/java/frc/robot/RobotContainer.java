@@ -38,6 +38,8 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import choreo.auto.AutoFactory;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -124,6 +126,7 @@ public class RobotContainer {
                 .withRotationalRate(-m_driverController.getRightX() * MaxAngularRate)
             )
     );
+    drivetrain.getPigeon2().setYaw(DriverStation.getAlliance().get() == Alliance.Blue ? 0 : 180);
     configureBindings();
   }
 
@@ -245,7 +248,7 @@ public class RobotContainer {
    */
   public Command getAutonomousCommand() {
     // An example command will be run in autonomous
-    return Commands.none();
+    return autoChooser.getSelected();
   }
   public void setRobotStateIdle() {
     superstructure.setWantedSuperState(WantedSuperState.IDLE);

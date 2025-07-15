@@ -15,7 +15,7 @@ public class ArmIOSparkMax implements ArmIO {
     private final SparkMax motor;
     private final DutyCycleEncoder encoder;
     private final ArmFeedforward ff = new ArmFeedforward(0., 0.035, 0);
-    PIDController controller= new PIDController(2.25, 0, 0.0);
+    PIDController controller= new PIDController(2.4067, 0, 0.0);
 
     public ArmIOSparkMax(int ID) {
         motor = new SparkMax(ID, MotorType.kBrushless);  // Neo 550 or Neo

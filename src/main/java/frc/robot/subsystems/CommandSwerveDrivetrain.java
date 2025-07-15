@@ -322,6 +322,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
         @Override
         public void periodic() {
           pose.update(getPigeon2().getRotation2d(), getModulePositions());
+          SmartDashboard.putNumber("null", getState().Pose.getRotation().getDegrees());
           // // SmartDashboard.putBoolean("Range valid", distanceSensor.isRangeValid());
           // // SmartDashboard.putNumber("Distance sensed", getSensorVal());
           
@@ -330,7 +331,7 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             double headingDeg = driveState.Pose.getRotation().getDegrees();
             double omegaRps = Units.radiansToRotations(driveState.Speeds.omegaRadiansPerSecond);
       
-            LimelightHelpers.SetRobotOrientation("limelight-fleft", headingDeg, 0, 0, 0, 0, 0);
+            LimelightHelpers.SetRobotOrientation("limelight-fleft", getPigeon2().getYaw().getValueAsDouble(), 0, 0, 0, 0, 0);
             var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-fleft");
             if (llMeasurement != null && llMeasurement.tagCount > 0 && Math.abs(omegaRps) < 2.0) {
               pose.addVisionMeasurement(llMeasurement.pose, llMeasurement.timestampSeconds);
