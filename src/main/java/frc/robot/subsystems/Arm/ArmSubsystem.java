@@ -67,7 +67,7 @@ public class ArmSubsystem extends SubsystemBase {
                 io.setPositionSetpoint(-0.055);
                 break;
             case GOING_TO_SCORE_L4:
-                io.setPositionSetpoint(0.1475);
+                io.setPositionSetpoint(0.16);
                 break;
             case GOING_TO_TRANSFER:
                 io.setPositionSetpoint(-0.23);

@@ -18,7 +18,7 @@ public class ElevatorIOSparkMax implements ElevatorIO {
 
     private final SparkLimitSwitch bottomSwitch;
     private final SparkLimitSwitch topSwitch;
-    ElevatorFeedforward ff = new ElevatorFeedforward(0.02, 0.055, 0);
+    ElevatorFeedforward ff = new ElevatorFeedforward(0.01, 0.055, 0);
     PIDController controller= new PIDController(1.69, 0, 0.03
     );
     public ElevatorIOSparkMax(int leftMotorID, int rightMotorID) {
@@ -44,6 +44,7 @@ public class ElevatorIOSparkMax implements ElevatorIO {
         SmartDashboard.putNumber("Position", inputs.position);
         SmartDashboard.putNumber("Setpoint", inputs.setpoint);
         SmartDashboard.putNumber("Velocity", inputs.velocity);
+        SmartDashboard.putData("PID", controller);
     }
 
     @Override
@@ -63,7 +64,7 @@ public class ElevatorIOSparkMax implements ElevatorIO {
         controller.setSetpoint(clamped);
 
         double currentPosition = Math.abs(encoder.getPosition() / 20.7856); // same as in updateInputs()
-        double output = controller.calculate(currentPosition);
+        double output = controller.calculate(currentPosition) + ff.calculate(0.);
 
         leftMotor.set(-output);
         rightMotor.set(-output); // same direction for both
