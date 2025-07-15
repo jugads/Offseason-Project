@@ -28,7 +28,7 @@ public class Superstructure extends SubsystemBase {
         TRANSFER_PREP,
         HANDOFF,
         SWINGLY_DINGLY,
-        SCORE
+        SCORE,
     }
 
     public enum CurrentSuperState {
@@ -46,7 +46,7 @@ public class Superstructure extends SubsystemBase {
         TRANSFER_PREPPING,
         HANDING_OFF,
         SWINGINGLY_DINGINGLY,
-        SCORING
+        SCORING,
     }
 
     private final HopperSubsystem hopperSubsystem;
@@ -224,5 +224,5 @@ public class Superstructure extends SubsystemBase {
             System.out.println("Switching to: " + newState);
             setWantedSuperState(newState);
         }, this);
-    }
+    } 
 }

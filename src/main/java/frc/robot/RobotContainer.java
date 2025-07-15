@@ -35,8 +35,11 @@ import com.ctre.phoenix6.swerve.SwerveRequest;
 import com.ctre.phoenix6.swerve.SwerveRequest.ForwardPerspectiveValue;
 import com.pathplanner.lib.auto.AutoBuilder;
 
+import choreo.auto.AutoFactory;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -69,6 +72,9 @@ public class RobotContainer {
   AlgaeGripperSubsystem algae;
   CommandSwerveDrivetrain drivetrain;
   LEDs leds;
+  AutoFactory factory;
+  public final AutoRoutines autos; 
+  private final SendableChooser<Command> autoChooser;
   private double MaxSpeed = TunerConstants.kSpeedAt12Volts.in(MetersPerSecond);
     private double MaxAngularRate = 3 * Math.PI;
     private double gyro = 1;
@@ -100,6 +106,13 @@ public class RobotContainer {
     drivetrain = TunerConstants.createDrivetrain();
     leds = new LEDs(new AddressableLED(9), new AddressableLEDBuffer(138), bluetooth, algae);
     superstructure = new Superstructure(hopper, elevator, climber, bluetooth, arm);
+    factory = drivetrain.createAutoFactory();
+    autos = new AutoRoutines(factory, superstructure, drivetrain, arm, elevator, bluetooth, hopper);
+    autoChooser = new SendableChooser<>();
+
+    autoChooser.addOption("Drive Test", autos.DriveTest());
+    autoChooser.addOption("Branches FCD", autos.BranchesFCD());
+    SmartDashboard.putData("Auto Chooser", autoChooser);
     
     drivetrain.setDefaultCommand(
             drivetrain.applyRequest(() ->
@@ -234,4 +247,5 @@ public class RobotContainer {
   public void setRobotStateIdle() {
     superstructure.setWantedSuperState(WantedSuperState.IDLE);
   }
+
 }
