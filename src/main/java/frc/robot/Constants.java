@@ -61,7 +61,7 @@ public class Constants {
         public static final double kElevL2 = 0.2; 
         public static final double kElevL3 = 0.49;
         public static final double kElevL4 = 0.94;
-        public static final double kElevTran = 0.37; //0.3775
+        public static final double kElevTran = 0.356; //0.3775
     }
     public class ArmConstants{
         public static final int kMotorID = 3;

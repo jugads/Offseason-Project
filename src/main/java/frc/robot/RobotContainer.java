@@ -45,6 +45,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
+import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.JoystickButton;
@@ -175,6 +176,7 @@ public class RobotContainer {
                 superstructure.setStateCommand(Superstructure.WantedSuperState.L4), () -> level == 3)
               , 
               superstructure.setStateCommand(Superstructure.WantedSuperState.L2), () -> level != 2),
+              new WaitCommand(0.5),
             Commands.defer(
                 () -> AutoBuilder.pathfindToPose(drivetrain.getNearestReefPoseRight(), K_CONSTRAINTS_Barging),
                 Set.of() // required subsystem dependencies if any
@@ -189,6 +191,7 @@ public class RobotContainer {
                 superstructure.setStateCommand(Superstructure.WantedSuperState.L4), () -> level == 3)
               , 
               superstructure.setStateCommand(Superstructure.WantedSuperState.L2), () -> level != 2),
+            new WaitCommand(0.5),
             Commands.defer(
                 () -> AutoBuilder.pathfindToPose(drivetrain.getNearestReefPoseLeft(), K_CONSTRAINTS_Barging),
                 Set.of() // required subsystem dependencies if any
