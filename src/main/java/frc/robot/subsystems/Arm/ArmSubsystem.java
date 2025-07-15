@@ -19,7 +19,8 @@ public class ArmSubsystem extends SubsystemBase {
         GO_TO_REGULAR_SCORE,
         GO_TO_L1,
         GO_TO_L4,
-        GO_TO_TRANSFER
+        GO_TO_TRANSFER,
+        AUTON_START_MOVE_ARM_OUT
     }
 
     private enum SystemState {
@@ -29,7 +30,8 @@ public class ArmSubsystem extends SubsystemBase {
         GOING_TO_SCORE_L2_L3,
         GOING_TO_SCORE_L1,
         GOING_TO_SCORE_L4,
-        GOING_TO_TRANSFER
+        GOING_TO_TRANSFER,
+        MOVING_ARM_OUT
     }
     private WantedState wantedState = WantedState.HOLD;
     private SystemState systemState = SystemState.HOLDING;
@@ -72,6 +74,8 @@ public class ArmSubsystem extends SubsystemBase {
             case GOING_TO_TRANSFER:
                 io.setPositionSetpoint(-0.23);
                 break;
+            case MOVING_ARM_OUT:
+                io.setPositionSetpoint(0.22);
             default:
                 io.holdArm();
                 break;
@@ -93,6 +97,8 @@ public class ArmSubsystem extends SubsystemBase {
                 return SystemState.DOWNING;
             case GO_TO_TRANSFER:
                 return SystemState.GOING_TO_TRANSFER;
+            case AUTON_START_MOVE_ARM_OUT:
+                return SystemState.MOVING_ARM_OUT;
             default:
                 return SystemState.HOLDING;
         }

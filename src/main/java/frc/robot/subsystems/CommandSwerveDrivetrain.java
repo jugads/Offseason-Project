@@ -19,9 +19,13 @@ import com.pathplanner.lib.config.PIDConstants;
 import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 
+import choreo.Choreo.TrajectoryLogger;
+import choreo.auto.AutoFactory;
+import choreo.trajectory.SwerveSample;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -62,6 +66,11 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
     private static final Rotation2d kBlueAlliancePerspectiveRotation = Rotation2d.kZero;
     /* Red alliance sees forward as 180 degrees (toward blue alliance wall) */
     private static final Rotation2d kRedAlliancePerspectiveRotation = Rotation2d.k180deg;
+      /** Swerve request to apply during field-centric path following */
+    private final SwerveRequest.ApplyFieldSpeeds m_pathApplyFieldSpeeds = new SwerveRequest.ApplyFieldSpeeds();
+    private final PIDController m_pathXController = new PIDController(0, 0, 0);
+    private final PIDController m_pathYController = new PIDController(0, 0, 0);
+    private final PIDController m_pathThetaController = new PIDController(0, 0, 0);
     private Pose2d[] currentAlignmentSide = new Pose2d[]{new Pose2d(0,0, new Rotation2d()), new Pose2d(0,0, new Rotation2d())};
     /* Keep track if we've ever applied the operator perspective before or not */
     private boolean m_hasAppliedOperatorPerspective = false;
@@ -222,16 +231,71 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
             }
             configureAutoBuilder();
         }
-    
         /**
-         * Returns a command that applies the specified control request to this swerve drivetrain.
-         *
-         * @param request Function returning the request to apply
-         * @return Command to run
-         */
-        public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
-            return run(() -> this.setControl(requestSupplier.get()));
-        }
+     * Creates a new auto factory for this drivetrain.
+     *
+     * @return AutoFactory for this drivetrain
+     */
+    public AutoFactory createAutoFactory() {
+      return createAutoFactory((sample, isStart) -> {});
+  }
+
+  /**
+   * Creates a new auto factory for this drivetrain with the given
+   * trajectory logger.
+   *
+   * @param trajLogger Logger for the trajectory
+   * @return AutoFactory for this drivetrain
+   */
+  public AutoFactory createAutoFactory(TrajectoryLogger<SwerveSample> trajLogger) {
+      return new AutoFactory(
+          () -> getState().Pose,
+          this::resetPose,
+          this::followPath,
+          true,
+          this,
+          trajLogger
+      );
+  }
+
+  /**
+   * Returns a command that applies the specified control request to this swerve drivetrain.
+   *
+   * @param request Function returning the request to apply
+   * @return Command to run
+   */
+  public Command applyRequest(Supplier<SwerveRequest> requestSupplier) {
+      return run(() -> this.setControl(requestSupplier.get()));
+  }
+
+  /**
+   * Follows the given field-centric path sample with PID.
+   *
+   * @param sample Sample along the path to follow
+   */
+  public void followPath(SwerveSample sample) {
+      m_pathThetaController.enableContinuousInput(-Math.PI, Math.PI);
+
+      var pose = getState().Pose;
+
+      var targetSpeeds = sample.getChassisSpeeds();
+      targetSpeeds.vxMetersPerSecond += m_pathXController.calculate(
+          pose.getX(), sample.x
+      );
+      targetSpeeds.vyMetersPerSecond += m_pathYController.calculate(
+          pose.getY(), sample.y
+      );
+      targetSpeeds.omegaRadiansPerSecond += m_pathThetaController.calculate(
+          pose.getRotation().getRadians(), sample.heading
+      );
+
+      setControl(
+          m_pathApplyFieldSpeeds.withSpeeds(targetSpeeds)
+              .withWheelForceFeedforwardsX(sample.moduleForcesX())
+              .withWheelForceFeedforwardsY(sample.moduleForcesY())
+      );
+  }
+       
     
         /**
          * Runs the SysId Quasistatic test in the given direction for the routine

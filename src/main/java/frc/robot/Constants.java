@@ -4,6 +4,8 @@ import com.pathplanner.lib.path.PathConstraints;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 
 public class Constants {
     public class DrivetrainConstants {
@@ -133,4 +135,9 @@ public class Constants {
         public static final Pose2d[] kAliBLUE8_9 = new Pose2d[]{new Pose2d(3.83, 5.47, Rotation2d.fromDegrees(-60)), new Pose2d(3.57, 5.33, Rotation2d.fromDegrees(-60))};
         public static final Pose2d[] kAliBLUE10_11 = new Pose2d[]{new Pose2d(5.43, 5.31, Rotation2d.fromDegrees(-120)), new Pose2d(5.14, 5.47, Rotation2d.fromDegrees(-120))};
     }
+    public class AutoPoses {
+        public static final Pose2d kRedRightSideAutoStart = new Pose2d(10.38149356842041,5.0152268409729,Rotation2d.fromDegrees(0));
+        public static final Pose2d kBlueRightSideAutoStart = new Pose2d(7.187115669250488,3.057382345199585,Rotation2d.fromRadians(Math.PI));
+    }
+    
 }
