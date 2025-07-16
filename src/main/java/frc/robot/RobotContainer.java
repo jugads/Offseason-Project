@@ -40,12 +40,14 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.InstantCommand;
+import edu.wpi.first.wpilibj2.command.ParallelCommandGroup;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
 import edu.wpi.first.wpilibj2.command.WaitCommand;
 import edu.wpi.first.wpilibj2.command.WaitUntilCommand;
@@ -153,11 +155,21 @@ public class RobotContainer {
       superstructure.setStateCommand(WantedSuperState.IDLE)
     );
     m_driverController.y().onTrue(
-      superstructure.setStateCommand(WantedSuperState.SCORE)
+      new ParallelCommandGroup(
+      superstructure.setStateCommand(WantedSuperState.SCORE),
+      new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 1))
+      )
     )
     .onFalse(
-      superstructure.setStateCommand(WantedSuperState.IDLE)
+      new ParallelCommandGroup(
+        superstructure.setStateCommand(WantedSuperState.IDLE),
+        new InstantCommand(() -> m_driverController.setRumble(RumbleType.kBothRumble, 0))
+        )    
     );
+    m_driverController.rightTrigger().whileTrue(
+      AutoBuilder.pathfindToPose(kBLUESOURCERIGHT_center, K_CONSTRAINTS_Barging)
+    );
+    m_driverController.start().onTrue(new InstantCommand(() -> drivetrain.getPigeon2().reset()));
     operator.leftTrigger().whileTrue(
       new SequentialCommandGroup(
         superstructure.setStateCommand(WantedSuperState.TRANSFER_PREP),
@@ -173,6 +185,7 @@ public class RobotContainer {
 
     m_driverController.b().whileTrue(
             new SequentialCommandGroup(
+            new InstantCommand(() -> drivetrain.resetPoseBasedOnLL()),
             new ConditionalCommand(
               new ConditionalCommand(
                 superstructure.setStateCommand(Superstructure.WantedSuperState.L3), 
@@ -188,6 +201,7 @@ public class RobotContainer {
         );
         m_driverController.x().whileTrue(
             new SequentialCommandGroup(
+            new InstantCommand(() -> drivetrain.resetPoseBasedOnLL()),
             new ConditionalCommand(
               new ConditionalCommand(
                 superstructure.setStateCommand(Superstructure.WantedSuperState.L3), 

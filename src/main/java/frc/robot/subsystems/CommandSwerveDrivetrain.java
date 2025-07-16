@@ -493,6 +493,12 @@ public class CommandSwerveDrivetrain extends TunerSwerveDrivetrain implements Su
           public double getTYLeft() {
             return m_limelightLeft.getEntry("ty").getDouble(0.);
           }
+          public void resetPoseBasedOnLL() {
+            var llMeasurement = LimelightHelpers.getBotPoseEstimate_wpiBlue_MegaTag2("limelight-fleft");
+            if (llMeasurement != null && llMeasurement.tagCount > 0) {
+              pose.resetPose(llMeasurement.pose);
+            }
+          }
           public boolean getTVLeft() {
             return m_limelightLeft.getEntry("tv").getDouble(0.) == 1.;
           }

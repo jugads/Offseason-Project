@@ -58,7 +58,7 @@ public class BluetoothSubsystem extends SubsystemBase {
                 scoreCounter = 0;
                 break;
             case READY_TO_SCORE:
-                io.setMotor(-0.8);
+                io.setMotor(-1.);
                 scoreCounter++;
                 break;
             case HAS_CORAL:
